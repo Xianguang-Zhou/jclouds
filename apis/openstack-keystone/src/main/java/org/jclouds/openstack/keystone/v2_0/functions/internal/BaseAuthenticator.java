@@ -32,6 +32,10 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import org.jclouds.openstack.keystone.v2_0.domain.Token;
+
+import java.util.Date;
+import java.util.TimeZone;
 
 public abstract class BaseAuthenticator<C> implements Function<Credentials, Access> {
 
@@ -58,6 +62,21 @@ public abstract class BaseAuthenticator<C> implements Function<Credentials, Acce
 
    @Override
    public Access apply(Credentials input) {
+      Access access = (Access) input.getAccess();
+      if (access != null) {
+         Token token = access.getToken();
+         if (token != null) {
+            Date tokenExpires = token.getExpires();
+            if (tokenExpires == null) {
+               return access;
+            } else {
+               if (new Date().compareTo(tokenExpires) < 0) {
+                  return access;
+               }
+            }
+         }
+      }
+
       Optional<String> tenantName = Optional.fromNullable(defaultTenantName);
       Optional<String> tenantId = Optional.fromNullable(defaultTenantId);
 
@@ -68,23 +87,46 @@ public abstract class BaseAuthenticator<C> implements Function<Credentials, Acce
          usernameOrAccessKey = input.identity.substring(input.identity.lastIndexOf(':') + 1);
       }
 
-      String passwordOrSecretKey = input.credential;
-
-      C creds = createCredentials(usernameOrAccessKey, passwordOrSecretKey);
-
-      Access access;
-      if (tenantId.isPresent()) {
-         access = authenticateWithTenantId(tenantId, creds);
-      } else if (tenantName.isPresent()) {
-         access = authenticateWithTenantName(tenantName, creds);
-      } else if (!requiresTenant) {
-         access = authenticateWithTenantName(tenantName, creds);
+      String authToken = input.getAuthToken();
+      if (authToken != null && !authToken.isEmpty()) {
+         if (tenantId.isPresent()) {
+            access = authenticateWithTenantIdAndToken(tenantId, authToken);
+         } else if (tenantName.isPresent()) {
+            access = authenticateWithTenantNameAndToken(tenantName, authToken);
+         } else if (!requiresTenant) {
+            access = authenticateWithTenantNameAndToken(tenantName, authToken);
+         } else {
+            throw new IllegalArgumentException(
+                  String.format(
+                        "current configuration is set to [%s]. Unless you set [%s] or [%s], you must prefix your identity with 'tenantName:'",
+                        REQUIRES_TENANT, TENANT_NAME, TENANT_ID));
+         }
       } else {
-         throw new IllegalArgumentException(
-               String.format(
-                     "current configuration is set to [%s]. Unless you set [%s] or [%s], you must prefix your identity with 'tenantName:'",
-                     REQUIRES_TENANT, TENANT_NAME, TENANT_ID));
+         String passwordOrSecretKey = input.credential;
+
+         C creds = createCredentials(usernameOrAccessKey, passwordOrSecretKey);
+
+         if (tenantId.isPresent()) {
+            access = authenticateWithTenantId(tenantId, creds);
+         } else if (tenantName.isPresent()) {
+            access = authenticateWithTenantName(tenantName, creds);
+         } else if (!requiresTenant) {
+            access = authenticateWithTenantName(tenantName, creds);
+         } else {
+            throw new IllegalArgumentException(
+                  String.format(
+                        "current configuration is set to [%s]. Unless you set [%s] or [%s], you must prefix your identity with 'tenantName:'",
+                        REQUIRES_TENANT, TENANT_NAME, TENANT_ID));
+         }
       }
+
+      input.setAccess(access);
+
+      Function<Object, Void> accessReceiver = input.getAccessReceiver();
+      if (accessReceiver != null) {
+         accessReceiver.apply(access);
+      }
+
       return access;
    }
 
@@ -94,4 +136,11 @@ public abstract class BaseAuthenticator<C> implements Function<Credentials, Acce
 
    protected abstract Access authenticateWithTenantName(Optional<String> tenantId, C apiAccessKeyCredentials);
 
+   protected Access authenticateWithTenantNameAndToken(Optional<String> tenantName, String authToken) {
+      throw new UnsupportedOperationException();
+   }
+
+   protected Access authenticateWithTenantIdAndToken(Optional<String> tenantId, String authToken) {
+      throw new UnsupportedOperationException();
+   }
 }

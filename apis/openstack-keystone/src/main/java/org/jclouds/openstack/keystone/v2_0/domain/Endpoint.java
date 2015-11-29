@@ -17,6 +17,7 @@
 package org.jclouds.openstack.keystone.v2_0.domain;
 
 import java.beans.ConstructorProperties;
+import java.io.Serializable;
 import java.net.URI;
 
 import org.jclouds.javax.annotation.Nullable;
@@ -34,7 +35,7 @@ import com.google.common.base.Objects.ToStringHelper;
  *      "http://docs.openstack.org/api/openstack-identity-service/2.0/content/Identity-Endpoint-Concepts-e1362.html"
  *      />
  */
-public class Endpoint {
+public class Endpoint implements Serializable {
 
    public static Builder<?> builder() {
       return new ConcreteBuilder();

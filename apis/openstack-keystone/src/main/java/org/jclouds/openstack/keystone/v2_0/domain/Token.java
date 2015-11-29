@@ -19,6 +19,7 @@ package org.jclouds.openstack.keystone.v2_0.domain;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.beans.ConstructorProperties;
+import java.io.Serializable;
 import java.util.Date;
 
 import org.jclouds.javax.annotation.Nullable;
@@ -39,7 +40,7 @@ import com.google.common.base.Optional;
  * @see <a href="http://docs.openstack.org/api/openstack-identity-service/2.0/content/Identity-Service-Concepts-e1362.html"
 />
  */
-public class Token implements Comparable<Token> {
+public class Token implements Comparable<Token>, Serializable {
 
    public static Builder<?> builder() {
       return new ConcreteBuilder();

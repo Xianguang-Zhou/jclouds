@@ -24,6 +24,7 @@ import org.jclouds.openstack.keystone.v2_0.config.CredentialType;
 import org.jclouds.openstack.keystone.v2_0.config.CredentialTypes;
 import org.jclouds.openstack.keystone.v2_0.domain.Access;
 import org.jclouds.openstack.keystone.v2_0.domain.PasswordCredentials;
+import org.jclouds.openstack.keystone.v2_0.domain.TokenId;
 import org.jclouds.openstack.keystone.v2_0.functions.internal.BaseAuthenticator;
 
 import com.google.common.base.Optional;
@@ -46,6 +47,11 @@ public class AuthenticatePasswordCredentials extends BaseAuthenticator<PasswordC
    @Override
    protected Access authenticateWithTenantId(Optional<String> tenantId, PasswordCredentials apiAccessKeyCredentials) {
       return api.authenticateWithTenantIdAndCredentials(tenantId.orNull(), apiAccessKeyCredentials);
+   }
+
+   @Override
+   protected Access authenticateWithTenantNameAndToken(Optional<String> tenantName, String authToken) {
+      return api.authenticateWithTenantNameAndToken(tenantName.orNull(), TokenId.createWithId(authToken));
    }
 
    @Override

@@ -19,6 +19,7 @@ package org.jclouds.openstack.keystone.v2_0.domain;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.beans.ConstructorProperties;
+import java.io.Serializable;
 import java.util.Set;
 
 import org.jclouds.javax.annotation.Nullable;
@@ -35,7 +36,7 @@ import com.google.common.collect.ImmutableSet;
  *      "http://docs.openstack.org/api/openstack-identity-service/2.0/content/Identity-Service-Concepts-e1362.html"
  *      />
  */
-public class Access extends ForwardingSet<Service> implements Comparable<Access> {
+public class Access extends ForwardingSet<Service> implements Comparable<Access>, Serializable {
 
    public static Builder<?> builder() {
       return new ConcreteBuilder();

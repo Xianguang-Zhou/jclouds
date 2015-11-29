@@ -199,6 +199,12 @@ public class ContextBuilder {
    protected Optional<Supplier<Credentials>> credentialsSupplierOption = Optional.absent();
    @Nullable
    protected String credential;
+   @Nullable
+   protected String authToken;
+   @Nullable
+   protected Object access;
+   @Nullable
+   protected Function<Object, Void> accessReceiver;
    protected ApiMetadata apiMetadata;
    protected String apiVersion;
    protected String buildVersion;
@@ -256,6 +262,21 @@ public class ContextBuilder {
    public ContextBuilder credentials(String identity, @Nullable String credential) {
       this.identity = Optional.of(checkNotNull(identity, "identity"));
       this.credential = credential;
+      return this;
+   }
+
+   public ContextBuilder authToken(String authToken) {
+      this.authToken = authToken;
+      return this;
+   }
+
+   public ContextBuilder accessReceiver(Function<Object, Void> accessReceiver) {
+      this.accessReceiver = accessReceiver;
+      return this;
+   }
+
+   public ContextBuilder access(Object access) {
+      this.access = access;
       return this;
    }
 
@@ -331,6 +352,9 @@ public class ContextBuilder {
    protected Supplier<Credentials> buildCredentialsSupplier(Properties expanded) {
       Credentials creds = new Credentials(getAndRemove(expanded, PROPERTY_IDENTITY), getAndRemove(expanded,
             PROPERTY_CREDENTIAL));
+      creds.setAccessReceiver(accessReceiver);
+      creds.setAccess(access);
+      creds.setAuthToken(authToken);
 
       Supplier<Credentials> credentialsSupplier;
       if (credentialsSupplierOption.isPresent()) {

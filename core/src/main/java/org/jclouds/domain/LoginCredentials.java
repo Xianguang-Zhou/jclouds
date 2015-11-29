@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static org.jclouds.crypto.Pems.PRIVATE_PKCS1_MARKER;
 import static org.jclouds.crypto.Pems.PRIVATE_PKCS8_MARKER;
 
+import com.google.common.base.Function;
 import org.jclouds.crypto.Pems;
 import org.jclouds.javax.annotation.Nullable;
 
@@ -46,7 +47,7 @@ public class LoginCredentials extends Credentials {
       if (creds instanceof LoginCredentials)
          return LoginCredentials.class.cast(creds).toBuilder();
       else
-         return builder().identity(creds.identity).credential(creds.credential);
+         return builder().identity(creds.identity).credential(creds.credential).authToken(creds.getAuthToken()).accessReceiver(creds.getAccessReceiver()).access(creds.getAccess());
    }
 
    public static Builder builder() {
@@ -57,6 +58,9 @@ public class LoginCredentials extends Credentials {
       private boolean authenticateSudo;
       private Optional<String> password = Optional.absent();
       private Optional<String> privateKey = Optional.absent();
+      private Optional<String> authToken = Optional.absent();
+      private Optional<Function<Object, Void>> accessReceiver = Optional.absent();
+      private Optional<Object> access = Optional.absent();
 
       public Builder identity(String identity) {
          return Builder.class.cast(super.identity(identity));
@@ -94,15 +98,34 @@ public class LoginCredentials extends Credentials {
          return this;
       }
 
+      public Builder authToken(String authToken) {
+         this.authToken = Optional.fromNullable(authToken);
+         return this;
+      }
+
+      public Builder accessReceiver(Function<Object, Void> accessReceiver) {
+         this.accessReceiver = Optional.fromNullable(accessReceiver);
+         return this;
+      }
+
+      public Builder access(Object access) {
+         this.access = Optional.fromNullable(access);
+         return this;
+      }
+
       public Builder authenticateSudo(boolean authenticateSudo) {
          this.authenticateSudo = authenticateSudo;
          return this;
       }
 
       public LoginCredentials build() {
-         if (identity == null && !password.isPresent() && !privateKey.isPresent() && !authenticateSudo)
+         if (identity == null && !password.isPresent() && !privateKey.isPresent() && !authenticateSudo && !authToken.isPresent() && !accessReceiver.isPresent() && !access.isPresent())
             return null;
-         return new LoginCredentials(identity, password, privateKey, authenticateSudo);
+         LoginCredentials loginCredentials = new LoginCredentials(identity, password, privateKey, authenticateSudo);
+         loginCredentials.setAccessReceiver(accessReceiver.orNull());
+         loginCredentials.setAccess(access.orNull());
+         loginCredentials.setAuthToken(authToken.orNull());
+         return loginCredentials;
       }
    }
 
@@ -206,6 +229,6 @@ public class LoginCredentials extends Credentials {
    @Override
    public String toString() {
       return "[user=" + getUser() + ", passwordPresent=" + password.isPresent() + ", privateKeyPresent="
-            + privateKey.isPresent() + ", shouldAuthenticateSudo=" + authenticateSudo + "]";
+            + privateKey.isPresent() + ", shouldAuthenticateSudo=" + authenticateSudo + ", authToken=" + getAuthToken() + ", access=" + getAccess() + "]";
    }
 }

@@ -16,12 +16,16 @@
  */
 package org.jclouds.domain;
 
+import com.google.common.base.Function;
 import com.google.common.base.Objects;
 
 public class Credentials {
    public static class Builder<T extends Credentials> {
       protected String identity;
       protected String credential;
+      protected String authToken;
+      protected Function<Object, Void> accessReceiver;
+      protected Object access;
 
       public Builder<T> identity(String identity) {
          this.identity = identity;
@@ -33,14 +37,60 @@ public class Credentials {
          return this;
       }
 
+      public Builder<T> authToken(String authToken) {
+         this.authToken = authToken;
+         return this;
+      }
+
+      public Builder<T> accessReceiver(Function<Object, Void> accessReceiver) {
+         this.accessReceiver = accessReceiver;
+         return this;
+      }
+
+      public Builder<T> access(Object access){
+         this.access = access;
+         return this;
+      }
+
       @SuppressWarnings("unchecked")
       public T build() {
-         return (T) new Credentials(identity, credential);
+         Credentials credentials = new Credentials(identity, credential);
+         credentials.setAccessReceiver(accessReceiver);
+         credentials.setAuthToken(authToken);
+         credentials.setAccess(access);
+         return (T) credentials;
       }
    }
 
    public final String identity;
    public final String credential;
+   private String authToken;
+   private Function<Object, Void> accessReceiver;
+   private Object access;
+
+   public String getAuthToken() {
+      return authToken;
+   }
+
+   public void setAuthToken(String authToken) {
+      this.authToken = authToken;
+   }
+
+   public Function<Object, Void> getAccessReceiver() {
+      return accessReceiver;
+   }
+
+   public void setAccessReceiver(Function<Object, Void> accessReceiver) {
+      this.accessReceiver = accessReceiver;
+   }
+
+   public Object getAccess() {
+      return access;
+   }
+
+   public void setAccess(Object access) {
+      this.access = access;
+   }
 
    public Credentials(String identity, String credential) {
       this.identity = identity;
@@ -48,17 +98,17 @@ public class Credentials {
    }
 
    public Builder<? extends Credentials> toBuilder() {
-      return new Builder<Credentials>().identity(identity).credential(credential);
+      return new Builder<Credentials>().identity(identity).credential(credential).authToken(authToken).accessReceiver(accessReceiver).access(access);
    }
 
    @Override
    public String toString() {
-      return "[identity=" + identity + ", credential=" + credential + "]";
+      return "[identity=" + identity + ", credential=" + credential + ", authToken=" + authToken + ", access=" + access + "]";
    }
 
    @Override
    public int hashCode() {
-      return Objects.hashCode(identity, credential);
+      return Objects.hashCode(identity, credential, authToken, accessReceiver, access);
    }
 
    @Override
@@ -71,6 +121,12 @@ public class Credentials {
       if (!Objects.equal(identity, other.identity))
          return false;
       if (!Objects.equal(credential, other.credential))
+         return false;
+      if (!Objects.equal(authToken, other.authToken))
+         return false;
+      if (!Objects.equal(accessReceiver, other.accessReceiver))
+         return false;
+      if (!Objects.equal(access, other.access))
          return false;
       return true;
    }

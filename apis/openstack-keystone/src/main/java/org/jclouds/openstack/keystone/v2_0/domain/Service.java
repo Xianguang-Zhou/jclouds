@@ -19,6 +19,7 @@ package org.jclouds.openstack.keystone.v2_0.domain;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.beans.ConstructorProperties;
+import java.io.Serializable;
 import java.util.Set;
 
 import org.jclouds.javax.annotation.Nullable;
@@ -36,7 +37,7 @@ import com.google.common.collect.ImmutableSet;
  * @see <a href="http://docs.openstack.org/api/openstack-typeentity-service/2.0/content/Identity-Service-Concepts-e1362.html"
 />
  */
-public class Service extends ForwardingSet<Endpoint> {
+public class Service extends ForwardingSet<Endpoint> implements Serializable {
 
    public static Builder<?> builder() {
       return new ConcreteBuilder();

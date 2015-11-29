@@ -25,6 +25,7 @@ import javax.ws.rs.core.MediaType;
 
 import org.jclouds.javax.annotation.Nullable;
 import org.jclouds.openstack.keystone.v2_0.binders.BindAuthToJsonPayload;
+import org.jclouds.openstack.keystone.v2_0.domain.TokenId;
 import org.jclouds.openstack.keystone.v2_0.domain.Access;
 import org.jclouds.openstack.keystone.v2_0.domain.ApiAccessKeyCredentials;
 import org.jclouds.openstack.keystone.v2_0.domain.PasswordCredentials;
@@ -40,6 +41,11 @@ import com.google.inject.name.Named;
 @Consumes(MediaType.APPLICATION_JSON)
 @Path("/tokens")
 public interface AuthenticationApi extends Closeable {
+
+   @POST
+   @SelectJson("access")
+   @MapBinder(BindAuthToJsonPayload.class)
+   Access authenticateWithTenantNameAndToken(@Nullable @PayloadParam("tenantName") String tenantName, TokenId token);
 
    /**
     * Authenticate to generate a token.
